@@ -19,7 +19,7 @@
         android:fontFamily="monospace"
         android:paddingStart="20dp"
         android:paddingTop="20dp"
-        android:textSize="20sp" />
+        android:textSize="20sp"/>
 
     <ListView
         android:id="@+id/listViewPersons"
@@ -27,5 +27,6 @@
         android:layout_height="427dp"
         android:overScrollMode="ifContentScrolls"
         android:paddingStart="30dp"
-        android:paddingEnd="30dp" />
+        android:paddingEnd="30dp"
+        android:textStyle="normal"/>
 </LinearLayout>

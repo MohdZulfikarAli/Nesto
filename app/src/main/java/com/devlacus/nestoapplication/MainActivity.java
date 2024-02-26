@@ -13,6 +13,8 @@ import androidx.core.content.ContextCompat;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Typeface;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
 import android.speech.RecognitionListener;
@@ -45,7 +47,6 @@ import com.google.mlkit.vision.face.FaceDetectorOptions;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
@@ -54,8 +55,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import android.app.AlertDialog;
 
 import org.json.JSONObject;
-
-import timber.log.Timber;
 
 public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTClientListener, GuestIdAPI.GuestIdInterface {
 
@@ -222,7 +221,7 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
 
     boolean resetflag;
 
-    private Handler handler;
+  //  private Handler emailhandler;
 
     private Runnable runnable;
 
@@ -230,6 +229,9 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
 
     private String base64;
 
+    private CountDownTimer timer;
+
+    TextView textViewTimer;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -261,7 +263,7 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
                 }
                 if(resetflag)
                 {
-                    resetActivityDelay();
+                    resetActivityDelay(30000);
                 }
                 if(resetactvity)
                 {
@@ -293,7 +295,7 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
         meet.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.meet;
+                String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.department;
                 playVideo(videoPath);
                 emailFlag = true;
                 flag = true;
@@ -313,9 +315,9 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
 
     }
 
-    private void resetActivityDelay() {
+    private void resetActivityDelay(int delay) {
         activityDelayHandler.removeCallbacks(activityDelayRunnable);
-        activityDelayHandler.postDelayed(activityDelayRunnable, 30000);
+        activityDelayHandler.postDelayed(activityDelayRunnable, delay);
     }
 
     private void resetActivity() {
@@ -328,7 +330,6 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
         super.onBackPressed();
         Log.d("string", " pressed");
     }
-
 
     private void startSpeechRecognition() {
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -451,7 +452,7 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
 
         Preview preview = new Preview.Builder().build();
         CameraSelector cameraSelector = new CameraSelector.Builder()
-                .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
+                .requireLensFacing(CameraSelector.LENS_FACING_BACK)
                 .build();
 
         FaceDetectorOptions options = new FaceDetectorOptions.Builder()
@@ -596,11 +597,11 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
 
         emailFormAlert.setCanceledOnTouchOutside(false);
 
-        handler = new Handler(Looper.getMainLooper());
+     //   Handler handler = new Handler(Looper.getMainLooper());
 
-        runnable = () -> resetActivityDelay();
+        resetActivityDelay(60000);
 
-        handler.postDelayed(runnable, 15000);
+    //    handler.postDelayed(runnable, 30000);
 
 
         String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.form;
@@ -623,29 +624,33 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
 
                 resetflag = false;
 
-                if(!guestName.isEmpty() && !purposeOfVisit.isEmpty()) {
-                    handler.removeCallbacksAndMessages(runnable);
+                if (!guestName.isEmpty() && !purposeOfVisit.isEmpty()) {
+                    //handler.removeCallbacksAndMessages(runnable);
                     String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.checking;
                     playVideo(videoPath);
+
                     mqttflag = true;
                     submitFlag = false;
                     voiceFlag = false;
                     stopSpeechRecognition();
-                    sendEmail(emp_id,guestId, purposeOfVisit, guestName);
+                    sendEmail(emp_id, guestId, purposeOfVisit, guestName);
                     emailFormAlert.dismiss();
                 }
+
                 else {
                     String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.form;
                     playVideo(videoPath);
                 }
             }
         });
+
     }
 
     private void showDepartmentListBottomSheet() {
 
         meet.setVisibility(View.GONE);
         bottomSheetFlag = true;
+        startFlag = false;
 
         // Create a bottom sheet dialog
         departmentBottomSheetDialog = new BottomSheetDialog(this);
@@ -653,7 +658,9 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
         departmentBottomSheetDialog.setContentView(departmentBottomSheetView);
 
         TextView text = departmentBottomSheetView.findViewById(R.id.txt);
-        text.setText("Choose a department");
+        text.setText("Choose a Department");
+        text.setTypeface(null, Typeface.BOLD_ITALIC); // Change text style here
+
 
         departmentBottomSheetDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
@@ -673,6 +680,8 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
 
             bottomSheetFlag = false;
 
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.meet;
+            playVideo(videoPath);
 
             departmentBottomSheetDialog.dismiss();
             showPersonListBottomSheet(position);
@@ -701,7 +710,8 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
         TextView text = bottomSheetView.findViewById(R.id.txt);
 
         if(emailFlag){
-            text.setText("Who would you like to meet?");
+            text.setText("Who would you like to Meet?");
+            text.setTypeface(null, Typeface.BOLD_ITALIC); // Change text style here
         }
 
 
@@ -809,7 +819,7 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
         }
         else if(result.contains("muhammed nizar"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.nizar;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.nizarkomath;
             playVideo(videoPath);
         }
         else if(result.contains("sandeep"))
@@ -924,7 +934,7 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
         }
         else if(result.contains("mohan kumar rai"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.mohan;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.kumar;
             playVideo(videoPath);
         }
         else if(result.contains("tariq"))
@@ -970,186 +980,186 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
         }
         else if(result.contains("anwar"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.sumesh;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.anwar;
             playVideo(videoPath);
         }
         else if(result.contains("arafath"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.sumesh;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.arafath;
             playVideo(videoPath);
         }
         else if(result.contains("yoonus"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.yoonus;
             playVideo(videoPath);
         }
         else if(result.contains("ma jaleel"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.jaleel;
             playVideo(videoPath);
         }
         else if(result.contains("abdul savad"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.savad;
             playVideo(videoPath);
         }
         else if(result.contains("muhammed mk"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.muhammed;
             playVideo(videoPath);
         }
         else if(result.contains("muhammed ali komath"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.ali;
             playVideo(videoPath);
         }
         else if(result.contains("saleesh"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.saleesh;
             playVideo(videoPath);
         }
         else if(result.contains("rashad"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.rashad;
             playVideo(videoPath);
         }
         else if(result.contains("mohan"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.mohan;
             playVideo(videoPath);
         }
         else if(result.contains("hashim"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.hashim;
             playVideo(videoPath);
         } else if(result.contains("shahad"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.shahad;
             playVideo(videoPath);
         }
         else if(result.contains("jeremy"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.jeremy;
             playVideo(videoPath);
         }
         else if(result.contains("abdullah"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.abdullah;
             playVideo(videoPath);
         }
         else if(result.contains("sajeer e"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.sajeer;
             playVideo(videoPath);
         }
         else if(result.contains("afsal"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.afsal;
             playVideo(videoPath);
         }
         else if(result.contains("shahul"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.shahul;
             playVideo(videoPath);
         }
         else if(result.contains("subhan"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.subhan;
             playVideo(videoPath);
         }
         else if(result.contains("krishna raj"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.krishna;
             playVideo(videoPath);
         }
         else if(result.contains("nizar komath"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.nizarkomath;
             playVideo(videoPath);
         }
         else if(result.contains("risad"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.risad;
             playVideo(videoPath);
         }
         else if(result.contains("noushad kt"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.noushad;
             playVideo(videoPath);
         }
         else if(result.contains("favas"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.favas;
             playVideo(videoPath);
         }
         else if(result.contains("rashid a"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.rashid;
             playVideo(videoPath);
         }
         else if(result.contains("monica sapkota"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.monica;
             playVideo(videoPath);
         }
         else if(result.contains("junaid"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.junaid;
             playVideo(videoPath);
         }
         else if(result.contains("thwelhath kp"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.thwelhath;
             playVideo(videoPath);
         }
         else if(result.contains("shakir mohammed"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.shakir;
             playVideo(videoPath);
         }
         else if(result.contains("shafeek ks"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.shafeek;
             playVideo(videoPath);
         }
         else if(result.contains("siaddin sidhique"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.siadeen;
             playVideo(videoPath);
         }
         else if(result.contains("rafeek"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.rafeek;
             playVideo(videoPath);
         }
         else if(result.contains("nisar kp"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.nisarkp;
             playVideo(videoPath);
         }
         else if(result.contains("salman"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.salman;
             playVideo(videoPath);
         }
         else if(result.contains("prathap"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.prathap;
             playVideo(videoPath);
         }
         else if(result.contains("lenish kannan"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.lenish;
             playVideo(videoPath);
         }
         else if(result.contains("shyam om"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.shyam;
             playVideo(videoPath);
         }
         else if(result.contains("swadik"))
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.swadik;
             playVideo(videoPath);
         }
 
@@ -1192,402 +1202,401 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.farsana;
             startVoiceAction(videoPath,"Farsana","nestogroup-942b-4c08-8d17-02732b96a2b4");
         }
-        else if(voiceAction && (result.contains("hameed")) )
+        else if(voiceAction && (result.contains("hameed")) && departmentIndex == 5 )
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.hameed;
             startVoiceAction(videoPath,"Hameed","nestogroup-942b-4c08-8d17-02732b96a2b3");
         }
-        else if(voiceAction && (result.contains("shamsudheen")) )
+        else if(voiceAction && (result.contains("shamsudheen")) && departmentIndex == 5 )
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.shamsudheen;
             startVoiceAction(videoPath,"Shamsudheen","nestogroup-942b-4c08-8d17-02732b96a2b2");
         }
-        else if(voiceAction && (result.contains("namshid")) )
+        else if(voiceAction && (result.contains("namshid")) && departmentIndex == 5 )
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
             startVoiceAction(videoPath,"Namshid","nestogroup-942b-4c08-8d17-02732b96a2b1");
         }
-        else if(voiceAction && (result.contains("siddique") || result.contains("pallathil")) && departmentIndex == 0)
+        else if(voiceAction && (result.contains("siddique")) && departmentIndex == 0)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.siddique;
             startVoiceAction(videoPath,"Siddique Pallathil","nestogroup-942b-4c08-8d17-02732b96a2b6");
         }
-        else if(voiceAction && (result.contains("jamal")))
+        else if(voiceAction && (result.contains("jamal")) && departmentIndex == 0)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.jamal;
             startVoiceAction(videoPath,"Jamal KP","nestogroup-942b-4c08-8d17-02732b96a2b7");
         }
-        else if(voiceAction && (result.contains("amina")))
+        else if(voiceAction && (result.contains("amina")) && departmentIndex == 0)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.amina;
             startVoiceAction(videoPath,"Amina","nestogroup-942b-4c08-8d17-02732b96a2b8");
         }
-        else if(voiceAction && (result.contains("faris")))
+        else if(voiceAction && (result.contains("faris")) && departmentIndex == 1)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.faris;
             startVoiceAction(videoPath,"Faris","nestogroup-942b-4c08-8d17-02732b96a2b9");
         }
-        else if(voiceAction && (result.contains("sayed")))
+        else if(voiceAction && (result.contains("sayed")) && departmentIndex == 1)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.sayed;
             startVoiceAction(videoPath,"Sayed","nestogroup-942b-4c08-8d17-02732b96a2b10");
         }
-        else if(voiceAction && (result.contains("alex") || result.contains("ninan")))
+        else if(voiceAction && (result.contains("alex")) && departmentIndex == 1)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.alex;
             startVoiceAction(videoPath,"Alex ninan","nestogroup-942b-4c08-8d17-02732b96a2b11");
         }
-        else if(voiceAction && (result.contains("nizar")))
+        else if(voiceAction && (result.contains("nizar")) && departmentIndex == 1)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.nizar;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.nizarkomath;
             startVoiceAction(videoPath,"Muhammed Nizar","nestogroup-942b-4c08-8d17-02732b96a2b12");
         }
-        else if(voiceAction && (result.contains("sandeep")))
+        else if(voiceAction && (result.contains("sandeep")) && departmentIndex == 1)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.sandeep;
             startVoiceAction(videoPath,"Sandeep","nestogroup-942b-4c08-8d17-02732b96a2b13");
         }
-        else if(voiceAction && (result.contains("sareena")))
+        else if(voiceAction && (result.contains("sareena")) && departmentIndex == 1)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.sareena;
             startVoiceAction(videoPath,"Sareena","nestogroup-942b-4c08-8d17-02732b96a2b14");
         }
-        else if(voiceAction && (result.contains("fayiz")))
+        else if(voiceAction && (result.contains("fayiz")) && departmentIndex == 1)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.fayiz;
             startVoiceAction(videoPath,"Muhammed Fayiz","nestogroup-942b-4c08-8d17-02732b96a2b15");
         }
-        else if(voiceAction && (result.contains("arshad")))
+        else if(voiceAction && (result.contains("arshad")) && departmentIndex == 1)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.arshad;
             startVoiceAction(videoPath,"Arshad","nestogroup-942b-4c08-8d17-02732b96a2b16");
         }
-        else if(voiceAction && (result.contains("ishack")))
+        else if(voiceAction && (result.contains("ishack")) && departmentIndex == 1)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.ishack;
             startVoiceAction(videoPath,"Ishack","nestogroup-942b-4c08-8d17-02732b96a2b17");
         }
-        else if(voiceAction && (result.contains("haja") || result.contains("shake")))
+        else if(voiceAction && (result.contains("haja") || result.contains("shake")) && departmentIndex == 1)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.haja;
             startVoiceAction(videoPath,"Haja Shake","nestogroup-942b-4c08-8d17-02732b96a2b18");
         }
-        else if(voiceAction && (result.contains("lijo")))
+        else if(voiceAction && (result.contains("lijo")) && departmentIndex == 1)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.lijo;
             startVoiceAction(videoPath,"Lijo","nestogroup-942b-4c08-8d17-02732b96a2b19");
         }
-        else if(voiceAction && (result.contains("sanid")))
+        else if(voiceAction && (result.contains("sanid")) && departmentIndex == 1)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.sanid;
             startVoiceAction(videoPath,"Sanid","nestogroup-942b-4c08-8d17-02732b96a2b20");
         }
-        else if(voiceAction && (result.contains("ashique")))
+        else if(voiceAction && (result.contains("ashique")) && departmentIndex == 1)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.ashique;
             startVoiceAction(videoPath,"Ashique","nestogroup-942b-4c08-8d17-02732b96a2b21");
         }
-        else if(voiceAction && (result.contains("anvar")))
+        else if(voiceAction && (result.contains("anvar")) && departmentIndex == 2)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.anvar;
             startVoiceAction(videoPath,"Anvar","nestogroup-942b-4c08-8d17-02732b96a2b22");
         }
-        else if(voiceAction && (result.contains("karla")))
+        else if(voiceAction && (result.contains("karla")) && departmentIndex == 3)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.karla;
             startVoiceAction(videoPath,"Karla","nestogroup-942b-4c08-8d17-02732b96a2b23");
         }
-        else if(voiceAction && (result.contains("sabith")))
+        else if(voiceAction && (result.contains("sabith")) && departmentIndex == 4)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.sabith;
             startVoiceAction(videoPath,"Sabith","nestogroup-942b-4c08-8d17-02732b96a2b24");
         }
-        else if(voiceAction && (result.contains("salam")))
+        else if(voiceAction && (result.contains("salam")) && departmentIndex == 4)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.salam;
             startVoiceAction(videoPath,"Salam","nestogroup-942b-4c08-8d17-02732b96a2b25");
         }
-        else if(voiceAction && (result.contains("fajis")))
+        else if(voiceAction && (result.contains("fajis")) && departmentIndex == 4)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.fajis;
             startVoiceAction(videoPath,"Fajis","nestogroup-942b-4c08-8d17-02732b96a2b26");
         }
-        else if(voiceAction && (result.contains("firoz")))
+        else if(voiceAction && (result.contains("firoz")) && departmentIndex == 5)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.firoz;
             startVoiceAction(videoPath,"Firoz P Mohamad Ali","nestogroup-942b-4c08-8d17-02732b96a2b27");
         }
-        else if(voiceAction && (result.contains("ashfaq")))
+        else if(voiceAction && (result.contains("ashfaq")) && departmentIndex == 5)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.ashfaq;
             startVoiceAction(videoPath,"Muhammed Ashfaq K.K","nestogroup-942b-4c08-8d17-02732b96a2b28");
         }
-        else if(voiceAction && (result.contains("faisal")))
+        else if(voiceAction && (result.contains("abbas")) && departmentIndex == 5)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.faisal;
             startVoiceAction(videoPath,"Faisal Abbas","nestogroup-942b-4c08-8d17-02732b96a2b29");
         }
-        else if(voiceAction && (result.contains("ansil") || result.contains("hameed")))
+        else if(voiceAction && (result.contains("ansil")) && departmentIndex == 5)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.hameed;
             startVoiceAction(videoPath,"Ansil.T.Hameed","nestogroup-942b-4c08-8d17-02732b96a2b30");
         }
-        else if(voiceAction && (result.contains("mujeeb") || result.contains("rahman")))
+        else if(voiceAction && (result.contains("mujeeb")) && departmentIndex == 5)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.mujeeb;
             startVoiceAction(videoPath,"Mujeeb Rahman.K","nestogroup-942b-4c08-8d17-02732b96a2b31");
         }
-        else if(voiceAction && (result.contains("shanavas")))
+        else if(voiceAction && (result.contains("shanavas")) && departmentIndex == 5)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.shanavas;
             startVoiceAction(videoPath,"Shanavas P.K","nestogroup-942b-4c08-8d17-02732b96a2b32");
         }
-        else if(voiceAction && (result.contains("subuhath")))
+        else if(voiceAction && (result.contains("subuhath")) && departmentIndex == 5)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.subuhathali;
             startVoiceAction(videoPath,"Subuhathali.M","nestogroup-942b-4c08-8d17-02732b96a2b33");
         }
-        else if(voiceAction && (result.contains("arshad")))
+        else if(voiceAction && (result.contains("arshad")) && departmentIndex == 5)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.arshad;
             startVoiceAction(videoPath,"Arshad Hameed","nestogroup-942b-4c08-8d17-02732b96a2b34");
         }
-        else if(voiceAction && (result.contains("kumar rai")))
+        else if(voiceAction && (result.contains("kumar rai")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.mohan;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.kumar;
             startVoiceAction(videoPath,"Mohan Kumar Rai","nestogroup-942b-4c08-8d17-02732b96a2b35");
         }
-        else if(voiceAction && (result.contains("tariq")))
+        else if(voiceAction && (result.contains("tariq")) && departmentIndex == 5)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.tariq;
             startVoiceAction(videoPath,"Tariq","nestogroup-942b-4c08-8d17-02732b96a2b36");
         }
-        else if(voiceAction && (result.contains("thanzil") || result.contains("namshi") || result.contains("nemshid")))
+        else if(voiceAction && (result.contains("thanzil")) && departmentIndex == 5)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.thanzil;
             startVoiceAction(videoPath,"Thanzil","nestogroup-942b-4c08-8d17-02732b96a2b37");
         }
-        else if(voiceAction && (result.contains("manu prasad")))
+        else if(voiceAction && (result.contains("manu prasad")) && departmentIndex == 5)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.manu;
             startVoiceAction(videoPath,"Manu Prasad","nestogroup-942b-4c08-8d17-02732b96a2b38");
         }
-        else if(voiceAction && (result.contains("askar")))
+        else if(voiceAction && (result.contains("askar")) && departmentIndex == 5)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.askar;
             startVoiceAction(videoPath,"Askar pp","nestogroup-942b-4c08-8d17-02732b96a2b39");
         }
-        else if(voiceAction && (result.contains("mansoor")))
+        else if(voiceAction && (result.contains("mansoor")) && departmentIndex == 5)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.mansoor;
             startVoiceAction(videoPath,"Mansoor","nestogroup-942b-4c088d17-02732b96a2b40");
         }
-        else if(voiceAction && (result.contains("yasser")))
+        else if(voiceAction && (result.contains("yasser")) && departmentIndex == 5)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.yasser;
             startVoiceAction(videoPath,"Yasser VM","nestogroup-942b-4c08-8d17-02732b96a2b41");
         }
-        else if(voiceAction && (result.contains("ashi")))
+        else if(voiceAction && (result.contains("ashi")) && departmentIndex == 5)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.ashiq;
             startVoiceAction(videoPath,"Ashique C","nestogroup-942b-4c08-8d17-02732b96a2b42");
         }
-        else if(voiceAction && (result.contains("sumesh")))
+        else if(voiceAction && (result.contains("sumesh")) && departmentIndex == 5)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.sumesh;
             startVoiceAction(videoPath,"Sumesh Mohanan","nestogroup-942b-4c08-8d17-02732b96a2b43");
         }
-        else if(voiceAction && (result.contains("anwar")))
+        else if(voiceAction && (result.contains("anwar")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.anwar;
             startVoiceAction(videoPath,"Anwar","nestogroup-942b-4c08-8d17-02732b96a2b44");
         }
-        else if(voiceAction && (result.contains("arafath")))
+        else if(voiceAction && (result.contains("arafath")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.arafath;
             startVoiceAction(videoPath,"Arafath","nestogroup-942b-4c08-8d17-02732b96a2b45");
         }
-        else if(voiceAction && (result.contains("yoonus")))
+        else if(voiceAction && (result.contains("yoonus")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.yoonus;
             startVoiceAction(videoPath,"Yoonus","nestogroup-942b-4c08-8d17-02732b96a2b46");
         }
-        else if(voiceAction && (result.contains("jaleel")))
+        else if(voiceAction && (result.contains("jaleel")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.jaleel;
             startVoiceAction(videoPath,"MA Jaleel","nestogroup-942b-4c08-8d17-02732b96a2b47");
         }
-        else if(voiceAction && (result.contains("abdul savad")))
+        else if(voiceAction && (result.contains("abdul savad")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.savad;
             startVoiceAction(videoPath,"Abdul Savad","nestogroup-942b-4c08-8d17-02732b96a2b48");
         }
-        else if(voiceAction && (result.contains("muhammed")))
+        else if(voiceAction && (result.contains("muhammed")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.muhammed;
             startVoiceAction(videoPath,"Muhammed MK","nestogroup-942b-4c08-8d17-02732b96a2b49");
         }
-        else if(voiceAction && (result.contains("ali")))
+        else if(voiceAction && (result.contains("ali")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.ali;
             startVoiceAction(videoPath,"Muhammed Ali Komath","nestogroup-942b-4c08-8d17-02732b96a2b50");
         }
-        else if(voiceAction && (result.contains("saleesh")))
+        else if(voiceAction && (result.contains("saleesh")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.saleesh;
             startVoiceAction(videoPath,"Saleesh","nestogroup-942b-4c08-8d17-02732b96a2b51");
         }
-        else if(voiceAction && (result.contains("rashad")))
+        else if(voiceAction && (result.contains("rashad")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.rashad;
             startVoiceAction(videoPath,"Rashad","nestogroup-942b-4c08-8d17-02732b96a2b52");
         }
-        else if(voiceAction && (result.contains("mohan")))
+        else if(voiceAction && (result.contains("mohan")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.mohan;
             startVoiceAction(videoPath,"Mohan","nestogroup-942b-4c08-8d17-02732b96a2b53");
         }
-        else if(voiceAction && (result.contains("hashim")))
+        else if(voiceAction && (result.contains("hashim")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.hashim;
             startVoiceAction(videoPath,"Hashim","nestogroup-942b-4c08-8d17-02732b96a2b54");
         }
-        else if(voiceAction && (result.contains("shahad")))
+        else if(voiceAction && (result.contains("shahad")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.shahad;
             startVoiceAction(videoPath,"Shahad","nestogroup-942b-4c08-8d17-02732b96a2b55");
         }
-        else if(voiceAction && (result.contains("jeremy")))
+        else if(voiceAction && (result.contains("jeremy")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.jeremy;
             startVoiceAction(videoPath,"Jeremy","nestogroup-942b-4c08-8d17-02732b96a2b56");
         }
-        else if(voiceAction && (result.contains("abdullah")))
+        else if(voiceAction && (result.contains("abdullah")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.abdullah;
             startVoiceAction(videoPath,"Abdullah","nestogroup-942b-4c08-8d17-02732b96a2b57");
         }
-        else if(voiceAction && (result.contains("sajeer")))
+        else if(voiceAction && (result.contains("sajeer")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.sajeer;
             startVoiceAction(videoPath,"Sajeer E","nestogroup-942b-4c08-8d17-02732b96a2b58");
         }
-        else if(voiceAction && (result.contains("afsal")))
+        else if(voiceAction && (result.contains("afsal")) && departmentIndex == 5)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
             startVoiceAction(videoPath,"Afsal","nestogroup-942b-4c088d17-02732b96a2b59");
         }
-        else if(voiceAction && (result.contains("shahul")))
+        else if(voiceAction && (result.contains("shahul")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.shahul;
             startVoiceAction(videoPath,"Shahul","nestogroup-942b-4c08-8d17-02732b96a2b60");
         }
-        else if(voiceAction && (result.contains("ramsheed")))
+        else if(voiceAction && (result.contains("ramsheed")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.ramsheed;
             startVoiceAction(videoPath,"ramsheed","nestogroup-942b-4c08-8d17-02732b96a2b61");
         }
-        else if(voiceAction && (result.contains("subhan")))
+        else if(voiceAction && (result.contains("subhan")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.subhan;
             startVoiceAction(videoPath,"Subhan","nestogroup-942b-4c08-8d17-02732b96a2b62");
         }
-        else if(voiceAction && (result.contains("krishna")))
+        else if(voiceAction && (result.contains("krishna")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.krishna;
             startVoiceAction(videoPath,"Krishna Raj","nestogroup-942b-4c08-8d17-02732b96a2b63");
         }
-        else if(voiceAction && (result.contains("komath")))
+        else if(voiceAction && (result.contains("komath")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.nizarkomath;
             startVoiceAction(videoPath,"Nizar Komath","nestogroup-942b-4c08-8d17-02732b96a2b64");
         }
-        else if(voiceAction && (result.contains("risad")))
+        else if(voiceAction && (result.contains("risad")) && departmentIndex == 5)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
             startVoiceAction(videoPath,"Risad","nestogroup-942b-4c08-8d17-02732b96a2b65");
         }
-        else if(voiceAction && (result.contains("noushad")))
+        else if(voiceAction && (result.contains("noushad")) && departmentIndex == 5)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
             startVoiceAction(videoPath,"Noushad KT","nestogroup-942b-4c08-8d17-02732b96a2b66");
         }
-        else if(voiceAction && (result.contains("favas")))
+        else if(voiceAction && (result.contains("favas")) && departmentIndex == 5)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
             startVoiceAction(videoPath,"Favas","nestogroup-942b-4c08-8d17-02732b96a2b67");
         }
-        else if(voiceAction && (result.contains("rashid")))
+        else if(voiceAction && (result.contains("rashid")) && departmentIndex == 5)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
             startVoiceAction(videoPath,"Rashid A","nestogroup-942b-4c08-8d17-02732b96a2b68");
         }
-        else if(voiceAction && (result.contains("monica")))
+        else if(voiceAction && (result.contains("monica")) && departmentIndex == 5)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
             startVoiceAction(videoPath,"Monica Sapkota","nestogroup-942b-4c08-8d17-02732b96a2b69");
         }
-        else if(voiceAction && (result.contains("junaid")))
+        else if(voiceAction && (result.contains("junaid")) && departmentIndex == 5)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
             startVoiceAction(videoPath,"Junaid","nestogroup-942b-4c08-8d17-02732b96a2b70");
         }
-        else if(voiceAction && (result.contains("thwelhath")))
+        else if(voiceAction && (result.contains("thwelhath")) && departmentIndex == 5)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
             startVoiceAction(videoPath,"Thwelhath KP","nestogroup-942b-4c08-8d17-02732b96a2b71");
         }
-        else if(voiceAction && (result.contains("shakir")))
+        else if(voiceAction && (result.contains("shakir")) && departmentIndex == 5)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
             startVoiceAction(videoPath,"Shakir Mohammed","nestogroup-942b-4c08-8d17-02732b96a2b72");
         }
-        else if(voiceAction && (result.contains("shafeek")))
+        else if(voiceAction && (result.contains("shafeek")) && departmentIndex == 5)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
             startVoiceAction(videoPath,"Shafeek KS","nestogroup-942b-4c08-8d17-02732b96a2b73");
         }
-        else if(voiceAction && (result.contains("siaddin")))
+        else if(voiceAction && (result.contains("siaddin")) && departmentIndex == 5)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
             startVoiceAction(videoPath,"Siaddin Sidhique","nestogroup-942b-4c08-8d17-02732b96a2b74");
         }
-        else if(voiceAction && (result.contains("rafeek")))
+        else if(voiceAction && (result.contains("rafeek")) && departmentIndex == 6)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
             startVoiceAction(videoPath,"Rafeek","nestogroup-942b-4c08-8d17-02732b96a2b75");
         }
-        else if(voiceAction && (result.contains("nisar")))
+        else if(voiceAction && (result.contains("nisar")) && departmentIndex == 6)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
             startVoiceAction(videoPath,"Nisar KP","nestogroup-942b-4c08-8d17-02732b96a2b76");
         }
-        else if(voiceAction && (result.contains("salman")))
+        else if(voiceAction && (result.contains("salman")) && departmentIndex == 6)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
             startVoiceAction(videoPath,"Salman","nestogroup-942b-4c08-8d17-02732b96a2b77");
         }
-        else if(voiceAction && (result.contains("prathap")))
+        else if(voiceAction && (result.contains("prathap")) && departmentIndex == 6)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
             startVoiceAction(videoPath,"Prathap","nestogroup-942b-4c08-8d17-02732b96a2b78");
         }
-        else if(voiceAction && (result.contains("lenish")))
+        else if(voiceAction && (result.contains("lenish")) && departmentIndex == 7)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
             startVoiceAction(videoPath,"Lenish Kannan","nestogroup-942b-4c08-8d17-02732b96a2b79");
         }
-        else if(voiceAction && (result.contains("shyam")))
+        else if(voiceAction && (result.contains("shyam")) && departmentIndex == 1)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
             startVoiceAction(videoPath,"Shyam OM","nestogroup-942b-4c08-8d17-02732b96a2b80");
         }
-        else if(voiceAction && (result.contains("swadik")))
+        else if(voiceAction && (result.contains("swadik")) && departmentIndex == 1)
         {
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
             startVoiceAction(videoPath,"Swadik","nestogroup-942b-4c08-8d17-02732b96a2b81");
         }
-
         else {
             startSpeechRecognition();
             speechRetryCount++;
@@ -1609,6 +1618,7 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
             actionflag = true;
         }
         voiceAction = false;
+        bottomSheet = false;
         bottomSheetFlag = false;
         bottomSheetDialog.dismiss();
         selectedPerson = name;
@@ -1620,13 +1630,39 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
         apiCaller = new ApiCaller();
         apiCaller.executeApiCall(employeeId, guestId, purposeOfVisit, guestName);
 
-        handler = new Handler(Looper.getMainLooper());
-
-        runnable = () -> resetActivityDelay();
+        //emailhandler = new Handler(Looper.getMainLooper());
 
         // Schedule the runnable to be executed after the delay
-        handler.postDelayed(runnable, 30000);
+        resetActivityDelay(120000);
+
     }
+
+//        // Start the timer for 2 minutes (120000 milliseconds)
+//        startTimer(120000);
+//    }
+//
+//    private void startTimer(long milliseconds) {
+//        if (timer != null) {
+//            timer.cancel();
+//        }
+//        timer = new CountDownTimer(milliseconds, 1000) {
+//            public void onTick(long millisUntilFinished) {
+//                // Update UI with the remaining time
+//                long secondsRemaining = millisUntilFinished / 1000;
+//                // Assuming you have a TextView named timerTextView to display the countdown
+//                textViewTimer.setText("Time remaining: " + secondsRemaining + " seconds");
+//            }
+//
+//            public void onFinish() {
+//                // Timer finished, do something here
+//                // For example, hide the timer TextView or perform some action
+//                textViewTimer.setVisibility(View.GONE);
+//            }
+//        }.start();
+
+        // Schedule the runnable to be executed after the delay
+  //      emailhandler.postDelayed(runnable, 30000);
+
 
     public void playVideo(String path)
     {
@@ -1671,7 +1707,7 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
 
         mqttflag = false;
 
-        handler.removeCallbacksAndMessages(runnable);
+   //     emailhandler.removeCallbacksAndMessages(runnable);
 
         activityDelayHandler.removeCallbacks(activityDelayRunnable);
 
