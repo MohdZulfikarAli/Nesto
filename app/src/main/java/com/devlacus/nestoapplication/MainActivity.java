@@ -84,6 +84,8 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
     Button buttonNo;
     TextInputEditText name;
     TextInputEditText purpose;
+    TextInputEditText company;
+    TextInputEditText mobile;
 
     boolean actionflag;
 
@@ -130,6 +132,12 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
 
     boolean resetactvity;
 
+    String companyName;
+
+    String phoneNumber;
+
+    boolean aftersubmitflag;
+
 
     private final Handler activityDelayHandler = new Handler();
     private final Runnable activityDelayRunnable = new Runnable() {
@@ -166,6 +174,8 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
                 startFlag = false;
                 resetactvity = false;
 
+                aftersubmitflag = false;
+
                 if(mqttClient != null)
                     mqttClient.disconnect();
             }
@@ -181,8 +191,8 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
     String[][] departmentPersons = {
             {"Farsana", "Siddique Pallathil - Managing Director", "Jamal KP - Managing Director", "Amina"},
             {"Shamsudheen NP", "Faris", "Sayed", "Alex ninan", "Muhammed Nizar - Head of Cost Control", "Sandeep - Project Manager", "Sareena", "Muhammed Fayiz", "Arshad - Design Manager", "Ishack - Project Engineer", "Haja Shake - MEP Engineer", "Lijo - Mechanical Engineer", "Sanid - Electrical Engineer", "Ashique - Project Engineer", "Shyam OM - Department Head,Graphics", "swadik - Loyalty Executive,Marketing"},
-            {"Anvar - Fire&Safety Engineer"},
-            {"Karla - Maintenance Admin"},
+            {"Anvar - Fire&Safety Engineer","vivek"},
+            {"Karla - Maintenance Admin","jovian"},
             {"Hameed PP - HR Manager", "Sabith - Payroll Manager,HR", "Salam", "Fajis - HR-Operation"},
             {"Firoz P Mohamad Ali - Group Buying Head-Lifestyle", "Muhammed Ashfaq K.K", "Faisal Abbas", "Ansil.T.Hameed", "Mujeeb Rahman.K", "Shanavas P.K", "Subuhathali.M", "Mohan Kumar Rai", "Tariq - Buying Head-HouseHold", "Thanzil", "Manu Prasad", "Askar pp", "Mansoor - Buying Head,Buying-Electronics & IT", "Yasser VM", "Ashique C", "Sumesh Mohanan", "Anwar", "Arafath", "Yoonus", "MA Jaleel", "Abdul Savad - Buying Manager(food)", "Muhammed MK - Senior Category Manager Grocer Food", "Muhammed Ali Komath - Senior Category Manager Grocer Food", "Saleesh - Buying Manager UK & USA Imports", "Mohan", "Hashim", "Shahad", "Jeremy", "Abdullah", "Sajeer E", "Afsal - Category Manager -Bakery,Butchery &Hot food,Fresh food", "Shahul", "ramsheed - Category Manager Frozen Food,FMCG", "Subhan - Category Manager Chilled&Diary,Fresh food", "Krishna Raj", "Nizar Komath - Category Manager Grocery Non Food", "Risad", "Noushad KT - Category Manager Health & Beauty", "Favas", "Rashid A - Buying Head,Private Label", "Monica Sapkota", "Junaid - Category Manager-Grocer Food-Pvt Label", "Thwelhath KP", "Shakir Mohammed - Buying Manager", "Shafeek KS - Category Manager-Grocery Non Food-Pvt Label", " Siaddin Sidhique - Category Manager-Delicatessen & RTC"},
             {"Rafeek - Finance Manager", "Nisar KP - Senior Accountant", "Salman", "Prathap - Senior Accountant"},
@@ -196,8 +206,8 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
     String[][] employee_id = {
             {"nestogroup-942b-4c08-8d17-02732b96a2b4", "nestogroup-942b-4c08-8d17-02732b96a2b6", "nestogroup-942b-4c08-8d17-02732b96a2b7", "nestogroup-942b-4c08-8d17-02732b96a2b8"},
             {"nestogroup-942b-4c08-8d17-02732b96a2b2", "nestogroup-942b-4c08-8d17-02732b96a2b9", "nestogroup-942b-4c08-8d17-02732b96a2b10", "nestogroup-942b-4c08-8d17-02732b96a2b11", "nestogroup-942b-4c08-8d17-02732b96a2b12", "nestogroup-942b-4c08-8d17-02732b96a2b13", "nestogroup-942b-4c08-8d17-02732b96a2b14", "nestogroup-942b-4c08-8d17-02732b96a2b15", "nestogroup-942b-4c08-8d17-02732b96a2b16", "nestogroup-942b-4c08-8d17-02732b96a2b17", "nestogroup-942b-4c08-8d17-02732b96a2b18", "nestogroup-942b-4c08-8d17-02732b96a2b19", "nestogroup-942b-4c08-8d17-02732b96a2b20", "nestogroup-942b-4c08-8d17-02732b96a2b21", "nestogroup-942b-4c08-8d17-02732b96a2b80", "nestogroup-942b-4c08-8d17-02732b96a281"},
-            {"nestogroup-942b-4c08-8d17-02732b96a2b22"},
-            {"nestogroup-942b-4c08-8d17-02732b96a2b23"},
+            {"nestogroup-942b-4c08-8d17-02732b96a2b22","261daf56-0287-43fe-9c13-93f295a3c371"},
+            {"nestogroup-942b-4c08-8d17-02732b96a2b23","bbac478c-ff0f-40db-b285-35c8ac8c38ae"},
             {"nestogroup-942b-4c08-8d17-02732b96a2b3", "nestogroup-942b-4c08-8d17-02732b96a2b24", "nestogroup-942b-4c08-8d17-02732b96a2b25", "nestogroup-942b-4c08-8d17-02732b96a2b26"},
             {"nestogroup-942b-4c08-8d17-02732b96a2b27", "nestogroup-942b-4c08-8d17-02732b96a2b28", "nestogroup-942b-4c08-8d17-02732b96a2b29", "nestogroup-942b-4c08-8d17-02732b96a2b30", "nestogroup-942b-4c08-8d17-02732b96a2b31", "nestogroup-942b-4c08-8d17-02732b96a2b32", "nestogroup-942b-4c08-8d17-02732b96a2b33", "nestogroup-942b-4c08-8d17-02732b96a2b34", "nestogroup-942b-4c08-8d17-02732b96a2b35", "nestogroup-942b-4c08-8d17-02732b96a2b36", "nestogroup-942b-4c08-8d17-02732b96a2b37", "nestogroup-942b-4c08-8d17-02732b96a2b38", "nestogroup-942b-4c08-8d17-02732b96a2b39", "nestogroup-942b-4c08-8d17-02732b96a2b40", "nestogroup-942b-4c08-8d17-02732b96a2b41", "nestogroup-942b-4c08-8d17-02732b96a2b42", "nestogroup-942b-4c08-8d17-02732b96a2b43", "nestogroup-942b-4c08-8d17-02732b96a2b44", "nestogroup-942b-4c08-8d17-02732b96a2b45", "nestogroup-942b-4c08-8d17-02732b96a2b46", "nestogroup-942b-4c08-8d17-02732b96a2b47", "nestogroup-942b-4c08-8d17-02732b96a2b48", "nestogroup-942b-4c08-8d17-02732b96a2b49", "nestogroup-942b-4c08-8d17-02732b96a2b50", "nestogroup-942b-4c08-8d17-02732b96a2b51", "nestogroup-942b-4c08-8d17-02732b96a2b52", "nestogroup-942b-4c08-8d17-02732b96a2b53", "nestogroup-942b-4c08-8d17-02732b96a2b54", "nestogroup-942b-4c08-8d17-02732b96a2b55", "nestogroup-942b-4c08-8d17-02732b96a2b56", "nestogroup-942b-4c08-8d17-02732b96a2b57", "nestogroup-942b-4c08-8d17-02732b96a2b58", "nestogroup-942b-4c08-8d17-02732b96a2b59", "nestogroup-942b-4c08-8d17-02732b96a2b60", "nestogroup-942b-4c08-8d17-02732b96a2b61", "nestogroup-942b-4c08-8d17-02732b96a2b62", "nestogroup-942b-4c08-8d17-02732b96a2b63", "nestogroup-942b-4c08-8d17-02732b96a2b64", "nestogroup-942b-4c08-8d17-02732b96a2b65", "nestogroup-942b-4c08-8d17-02732b96a2b66", "nestogroup-942b-4c08-8d17-02732b96a2b67", "nestogroup-942b-4c08-8d17-02732b96a2b68", "nestogroup-942b-4c08-8d17-02732b96a2b69", "nestogroup-942b-4c08-8d17-02732b96a2b70", "nestogroup-942b-4c08-8d17-02732b96a2b71", "nestogroup-942b-4c08-8d17-02732b96a2b72", "nestogroup-942b-4c08-8d17-02732b96a2b73", "nestogroup-942b-4c08-8d17-02732b96a2b74"},
             {"nestogroup-942b-4c08-8d17-02732b96a2b75", "nestogroup-942b-4c08-8d17-02732b96a2b76", "nestogroup-942b-4c08-8d17-02732b96a2b77", "nestogroup-942b-4c08-8d17-02732b96a2b78"},
@@ -256,17 +266,14 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
         video.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mediaPlayer) {
-                if(voiceFlag)
-                {
+                if (voiceFlag) {
                     startSpeechRecognition();
                     speechRetryCount = 0;
                 }
-                if(resetflag)
-                {
+                if (resetflag) {
                     resetActivityDelay(30000);
                 }
-                if(resetactvity)
-                {
+                if (resetactvity) {
                     resetActivity();
                 }
                 if (flag) {
@@ -278,17 +285,18 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
                     showDialog();
                     dialogFlag = false;
                 }
-                if(mqttflag)
-                {
+                if (mqttflag) {
                     mqttClient.connect();
                     mqttflag = false;
                 }
-                if(yesNoFlag)
-                {
+                if (yesNoFlag) {
                     toggle = true;
                     showYesOrNoDialog();
                     yesNoFlag = false;
                 }
+                if (aftersubmitflag) {
+                    resetActivity();
+            }
             }
         });
 
@@ -325,11 +333,11 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
         activityDelayRunnable.run();
     }
 
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        Log.d("string", " pressed");
-    }
+//    @Override
+//    public void onBackPressed() {
+//        super.onBackPressed();
+//        Log.d("string", " pressed");
+//    }
 
     private void startSpeechRecognition() {
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -586,7 +594,8 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
 
         name = emailView.findViewById(R.id.name);
         purpose = emailView.findViewById(R.id.purpose);
-
+        company = emailView.findViewById(R.id.company);
+        mobile = emailView.findViewById(R.id.mobile);
 
         // Set up the AlertDialog
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -597,12 +606,7 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
 
         emailFormAlert.setCanceledOnTouchOutside(false);
 
-     //   Handler handler = new Handler(Looper.getMainLooper());
-
         resetActivityDelay(60000);
-
-    //    handler.postDelayed(runnable, 30000);
-
 
         String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.form;
         playVideo(videoPath);
@@ -619,21 +623,26 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
                 // Handle the submit button click
                 String guestName = Objects.requireNonNull(name.getText()).toString();
                 String purposeOfVisit = Objects.requireNonNull(purpose.getText()).toString();
+                String companyName = Objects.requireNonNull(company.getText()).toString();
+                String phoneNumber = Objects.requireNonNull(mobile.getText()).toString();
+
 
                 hideKeyboard(purpose);
 
                 resetflag = false;
 
-                if (!guestName.isEmpty() && !purposeOfVisit.isEmpty()) {
+                if (!guestName.isEmpty() && !purposeOfVisit.isEmpty() && !companyName.isEmpty() && !phoneNumber.isEmpty()) {
                     //handler.removeCallbacksAndMessages(runnable);
                     String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.checking;
                     playVideo(videoPath);
+
+                    aftersubmitflag = true;
 
                     mqttflag = true;
                     submitFlag = false;
                     voiceFlag = false;
                     stopSpeechRecognition();
-                    sendEmail(emp_id, guestId, purposeOfVisit, guestName);
+                    sendEmail(emp_id, guestId, purposeOfVisit, guestName, companyName, phoneNumber);
                     emailFormAlert.dismiss();
                 }
 
@@ -1162,6 +1171,16 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.swadik;
             playVideo(videoPath);
         }
+        else if(result.contains("vivek"))
+        {
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.swadik;
+            playVideo(videoPath);
+        }
+        else if(result.contains("jovian"))
+        {
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.swadik;
+            playVideo(videoPath);
+        }
 
     }
     public void findVoiceAction(String action)
@@ -1514,88 +1533,98 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
         }
         else if(voiceAction && (result.contains("risad")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.risad;
             startVoiceAction(videoPath,"Risad","nestogroup-942b-4c08-8d17-02732b96a2b65");
         }
         else if(voiceAction && (result.contains("noushad")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.noushad;
             startVoiceAction(videoPath,"Noushad KT","nestogroup-942b-4c08-8d17-02732b96a2b66");
         }
         else if(voiceAction && (result.contains("favas")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.favas;
             startVoiceAction(videoPath,"Favas","nestogroup-942b-4c08-8d17-02732b96a2b67");
         }
         else if(voiceAction && (result.contains("rashid")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.rashid;
             startVoiceAction(videoPath,"Rashid A","nestogroup-942b-4c08-8d17-02732b96a2b68");
         }
         else if(voiceAction && (result.contains("monica")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.monica;
             startVoiceAction(videoPath,"Monica Sapkota","nestogroup-942b-4c08-8d17-02732b96a2b69");
         }
         else if(voiceAction && (result.contains("junaid")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.junaid;
             startVoiceAction(videoPath,"Junaid","nestogroup-942b-4c08-8d17-02732b96a2b70");
         }
         else if(voiceAction && (result.contains("thwelhath")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.thwelhath;
             startVoiceAction(videoPath,"Thwelhath KP","nestogroup-942b-4c08-8d17-02732b96a2b71");
         }
         else if(voiceAction && (result.contains("shakir")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.shakir;
             startVoiceAction(videoPath,"Shakir Mohammed","nestogroup-942b-4c08-8d17-02732b96a2b72");
         }
         else if(voiceAction && (result.contains("shafeek")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.shafeek;
             startVoiceAction(videoPath,"Shafeek KS","nestogroup-942b-4c08-8d17-02732b96a2b73");
         }
         else if(voiceAction && (result.contains("siaddin")) && departmentIndex == 5)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.siadeen;
             startVoiceAction(videoPath,"Siaddin Sidhique","nestogroup-942b-4c08-8d17-02732b96a2b74");
         }
         else if(voiceAction && (result.contains("rafeek")) && departmentIndex == 6)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.rafeek;
             startVoiceAction(videoPath,"Rafeek","nestogroup-942b-4c08-8d17-02732b96a2b75");
         }
         else if(voiceAction && (result.contains("nisar")) && departmentIndex == 6)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.nisarkp;
             startVoiceAction(videoPath,"Nisar KP","nestogroup-942b-4c08-8d17-02732b96a2b76");
         }
         else if(voiceAction && (result.contains("salman")) && departmentIndex == 6)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.salman;
             startVoiceAction(videoPath,"Salman","nestogroup-942b-4c08-8d17-02732b96a2b77");
         }
         else if(voiceAction && (result.contains("prathap")) && departmentIndex == 6)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.prathap;
             startVoiceAction(videoPath,"Prathap","nestogroup-942b-4c08-8d17-02732b96a2b78");
         }
         else if(voiceAction && (result.contains("lenish")) && departmentIndex == 7)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.lenish;
             startVoiceAction(videoPath,"Lenish Kannan","nestogroup-942b-4c08-8d17-02732b96a2b79");
         }
         else if(voiceAction && (result.contains("shyam")) && departmentIndex == 1)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.shyam;
             startVoiceAction(videoPath,"Shyam OM","nestogroup-942b-4c08-8d17-02732b96a2b80");
         }
         else if(voiceAction && (result.contains("swadik")) && departmentIndex == 1)
         {
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.namshid;
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.swadik;
             startVoiceAction(videoPath,"Swadik","nestogroup-942b-4c08-8d17-02732b96a2b81");
+        }
+        else if(voiceAction && (result.contains("swadik")) && departmentIndex == 1)
+        {
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.swadik;
+            startVoiceAction(videoPath,"vivek","261daf56-0287-43fe-9c13-93f295a3c371");
+        }
+        else if(voiceAction && (result.contains("jovian")) && departmentIndex == 1)
+        {
+            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.swadik;
+            startVoiceAction(videoPath,"jovian","bbac478c-ff0f-40db-b285-35c8ac8c38ae");
         }
         else {
             startSpeechRecognition();
@@ -1625,10 +1654,10 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
         this.emp_id = emp_id;
     }
 
-    private void sendEmail(String employeeId,String guestId, String purposeOfVisit, String guestName) {
+    private void sendEmail(String employeeId,String guestId, String purposeOfVisit, String guestName, String companyName, String phoneNumber) {
 
         apiCaller = new ApiCaller();
-        apiCaller.executeApiCall(employeeId, guestId, purposeOfVisit, guestName);
+        apiCaller.executeApiCall(employeeId, guestId, purposeOfVisit, guestName, companyName,phoneNumber);
 
         //emailhandler = new Handler(Looper.getMainLooper());
 
@@ -1702,6 +1731,8 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
 
     @Override
     public void onMessageReceived(String topic, String message) {
+
+        aftersubmitflag = false;
 
         resetflag = true;
 

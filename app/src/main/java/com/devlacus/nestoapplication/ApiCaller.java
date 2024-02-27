@@ -23,11 +23,11 @@ public class ApiCaller {
     public ApiCaller() {;
     }
 
-    public void executeApiCall(String employeeId, String guestId, String purposeOfVisit, String guestName) {
+    public void executeApiCall(String employeeId, String guestId, String purposeOfVisit, String guestName, String companyName, String phoneNumber) {
 
         CompletableFuture.runAsync(() -> {
             try {
-                String result = performApiCall(employeeId, guestId, purposeOfVisit, guestName);
+                String result = performApiCall(employeeId, guestId, purposeOfVisit, guestName, companyName,phoneNumber);
                 notifyCallback(result);
                 Log.d("email status",result);
             } catch (Exception e) {
@@ -36,7 +36,7 @@ public class ApiCaller {
         });
     }
 
-    private String performApiCall(String employeeId, String guestId, String purposeOfVisit, String guestName) throws IOException {
+    private String performApiCall(String employeeId, String guestId, String purposeOfVisit, String guestName, String companyName, String phoneNumber) throws IOException {
         // Create URL
         URL url = new URL(API_URL);
 
@@ -59,6 +59,8 @@ public class ApiCaller {
                 "    \"guest_id\": \"" + guestId + "\",\n" +
                 "    \"purpose_of_visit\": \"" + purposeOfVisit + "\",\n" +
                 "    \"guest_name\": \"" + guestName + "\"\n" +
+                "    \"company_name\": \"" + companyName + "\",\n" +
+                "    \"phone_number\": \"" + phoneNumber + "\"\n" +
                 "}";
 
         // Get the output stream and write the JSON data to the server
