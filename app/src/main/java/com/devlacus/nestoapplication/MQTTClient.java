@@ -1,6 +1,7 @@
 package com.devlacus.nestoapplication;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.util.Log;
 
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
@@ -17,20 +18,18 @@ public class MQTTClient {
     private static final String CLIENT_ID = "tr56fdsretge674fegyge";
     private static final String TOPIC = "/user_data"; // Update with your desired MQTT topic
 
-    private MqttAndroidClient mqttAndroidClient;
+    private final MqttAndroidClient mqttAndroidClient;
 
-    private MQTTClientListener mqttclient;
+    private final MQTTClientListener mqttclient;
 
-    public interface MQTTClientListener
-    {
-        public void onMessageReceived(String topic, String message);
+    public interface MQTTClientListener {
+        void onMessageReceived(String topic, String message);
     }
 
     public MQTTClient(Context context, MQTTClientListener callback) {
         mqttclient = callback;
 
         mqttAndroidClient = new MqttAndroidClient(context, BROKER_URI, CLIENT_ID, Ack.AUTO_ACK);
-
 
         mqttAndroidClient.setCallback(new MqttCallback() {
             @Override
@@ -41,9 +40,11 @@ public class MQTTClient {
             @Override
             public void messageArrived(String topic, org.eclipse.paho.client.mqttv3.MqttMessage message) throws Exception {
                 // Handle incoming messages
+                Log.d("mqtt incoming message", message.toString());
+
                 String payload = new String(message.getPayload());
                 // Send the payload back to the MainActivity
-                mqttclient.onMessageReceived(topic,payload);
+                mqttclient.onMessageReceived(topic, payload);
             }
 
             @Override
@@ -55,27 +56,44 @@ public class MQTTClient {
     }
 
     public void connect() {
-        MqttConnectOptions options = new MqttConnectOptions();
-        options.setAutomaticReconnect(true);
-        options.setUserName("domainenroll");
-        options.setPassword("de120467".toCharArray());
-        options.setCleanSession(false);
+        new ConnectTask().execute();
+    }
 
+    public void disconnect() {
         try {
-            mqttAndroidClient.connect(options, null, new IMqttActionListener() {
-                @Override
-                public void onSuccess(IMqttToken asyncActionToken) {
-                    Log.d("Connection", "Successful");
-                    subscribeToTopic();
-                }
-
-                @Override
-                public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                    Log.d("Connection", "unsuccessful"+exception);
-                }
-            });
+            mqttAndroidClient.disconnect();
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private class ConnectTask extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            MqttConnectOptions options = new MqttConnectOptions();
+            options.setAutomaticReconnect(true);
+            options.setUserName("domainenroll");
+            options.setPassword("de120467".toCharArray());
+            options.setCleanSession(false);
+
+            try {
+                mqttAndroidClient.connect(options, null, new IMqttActionListener() {
+                    @Override
+                    public void onSuccess(IMqttToken asyncActionToken) {
+                        Log.d("Connection", "Successful");
+                        subscribeToTopic();
+                    }
+
+                    @Override
+                    public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                        Log.d("Connection", "unsuccessful" + exception);
+                    }
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
         }
     }
 
@@ -93,14 +111,6 @@ public class MQTTClient {
                     Log.d("Subscription", "subscription unsuccessful");
                 }
             });
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void disconnect() {
-        try {
-            mqttAndroidClient.disconnect();
         } catch (Exception e) {
             e.printStackTrace();
         }

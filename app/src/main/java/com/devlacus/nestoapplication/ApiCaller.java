@@ -58,7 +58,7 @@ public class ApiCaller {
                 "    \"employee_id\": \"" + employeeId + "\",\n" +
                 "    \"guest_id\": \"" + guestId + "\",\n" +
                 "    \"purpose_of_visit\": \"" + purposeOfVisit + "\",\n" +
-                "    \"guest_name\": \"" + guestName + "\"\n" +
+                "    \"guest_name\": \"" + guestName + "\",\n" +
                 "    \"company_name\": \"" + companyName + "\",\n" +
                 "    \"phone_number\": \"" + phoneNumber + "\"\n" +
                 "}";

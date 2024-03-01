@@ -16,7 +16,6 @@ import android.content.DialogInterface;
 import android.graphics.Typeface;
 import android.os.CountDownTimer;
 import android.os.Handler;
-import android.os.Looper;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.content.Intent;
@@ -59,12 +58,9 @@ import org.json.JSONObject;
 public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTClientListener, GuestIdAPI.GuestIdInterface {
 
     Button meet;
-
     boolean flag;
-
     VideoView video;
 
-    private TokenManager tokenManager;
     private static final int REQUEST_CODE_PERMISSIONS = 10;
     private static final String[] REQUIRED_PERMISSIONS = new String[]{android.Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO};
 
@@ -131,10 +127,6 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
     boolean startFlag;
 
     boolean resetactvity;
-
-    String companyName;
-
-    String phoneNumber;
 
     boolean aftersubmitflag;
 
@@ -247,57 +239,40 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
-//        tokenManager = new TokenManager(this);
-//
-//        if (tokenManager.getToken() == null) {
-//            // Token is not valid or not found, redirect to LoginActivity
-//            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-//            startActivity(intent);
-//            finish();
-//        }
-
         meet = findViewById(R.id.meet);
         video = findViewById(R.id.video);
 
         meet.setVisibility(View.GONE);
 
 
-        video.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mediaPlayer) {
-                if (voiceFlag) {
-                    startSpeechRecognition();
-                    speechRetryCount = 0;
-                }
-                if (resetflag) {
-                    resetActivityDelay(30000);
-                }
-                if (resetactvity) {
-                    resetActivity();
-                }
-                if (flag) {
-                    showDepartmentListBottomSheet();
-                    flag = false;
-                }
-                if (dialogFlag) {
-                    actionflag = true;
-                    showDialog();
-                    dialogFlag = false;
-                }
-                if (mqttflag) {
-                    mqttClient.connect();
-                    mqttflag = false;
-                }
-                if (yesNoFlag) {
-                    toggle = true;
-                    showYesOrNoDialog();
-                    yesNoFlag = false;
-                }
-                if (aftersubmitflag) {
-                    resetActivity();
+        video.setOnCompletionListener(mediaPlayer -> {
+            if (voiceFlag) {
+                startSpeechRecognition();
+                speechRetryCount = 0;
             }
+            if (resetflag) {
+                resetActivityDelay(30000);
             }
+            if (resetactvity) {
+                resetActivity();
+            }
+            if (flag) {
+                showDepartmentListBottomSheet();
+                flag = false;
+            }
+            if (dialogFlag) {
+                actionflag = true;
+                showDialog();
+                dialogFlag = false;
+            }
+            if (yesNoFlag) {
+                toggle = true;
+                showYesOrNoDialog();
+                yesNoFlag = false;
+            }
+            if (aftersubmitflag) {
+                resetActivity();
+        }
         });
 
         meet.setOnClickListener(new View.OnClickListener() {
@@ -555,29 +530,23 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
 
         buttonYes = dialogView.findViewById(R.id.yesButton);
         buttonNo = dialogView.findViewById(R.id.noButton);
-        buttonYes.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                yesOrNoDialog.dismiss();
-                actionflag = false;
-                dialogFlag = false;
-                if(emailFlag)
-                {
-                    showEmailDialog();
-                }
+        buttonYes.setOnClickListener(view -> {
+            yesOrNoDialog.dismiss();
+            actionflag = false;
+            dialogFlag = false;
+            if(emailFlag)
+            {
+                showEmailDialog();
             }
         });
 
-        buttonNo.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                yesOrNoDialog.dismiss();
-                actionflag = false;
-                dialogFlag = false;
-                if(emailFlag)
-                {
-                    meet.performClick();
-                }
+        buttonNo.setOnClickListener(view -> {
+            yesOrNoDialog.dismiss();
+            actionflag = false;
+            dialogFlag = false;
+            if(emailFlag)
+            {
+                meet.performClick();
             }
         });
 
@@ -606,6 +575,8 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
 
         emailFormAlert.setCanceledOnTouchOutside(false);
 
+        resetflag = false;
+
         resetActivityDelay(60000);
 
         String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.form;
@@ -617,39 +588,37 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
 
 
         btnSubmit = emailView.findViewById(R.id.btnSubmit);
-        btnSubmit.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Handle the submit button click
-                String guestName = Objects.requireNonNull(name.getText()).toString();
-                String purposeOfVisit = Objects.requireNonNull(purpose.getText()).toString();
-                String companyName = Objects.requireNonNull(company.getText()).toString();
-                String phoneNumber = Objects.requireNonNull(mobile.getText()).toString();
+        btnSubmit.setOnClickListener(v -> {
+            // Handle the submit button click
+            String guestName = Objects.requireNonNull(name.getText()).toString();
+            String purposeOfVisit = Objects.requireNonNull(purpose.getText()).toString();
+            String companyName = Objects.requireNonNull(company.getText()).toString();
+            String phoneNumber = Objects.requireNonNull(mobile.getText()).toString();
+
+            hideKeyboard(purpose);
 
 
-                hideKeyboard(purpose);
+            if (!guestName.isEmpty() && !purposeOfVisit.isEmpty() && !companyName.isEmpty() && !phoneNumber.isEmpty()) {
+                activityDelayHandler.removeCallbacks(activityDelayRunnable);
+                String videoPath1 = "android.resource://" + getPackageName() + "/" + R.raw.checking;
+                playVideo(videoPath1);
 
-                resetflag = false;
+               aftersubmitflag = true;
 
-                if (!guestName.isEmpty() && !purposeOfVisit.isEmpty() && !companyName.isEmpty() && !phoneNumber.isEmpty()) {
-                    //handler.removeCallbacksAndMessages(runnable);
-                    String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.checking;
-                    playVideo(videoPath);
+     //           mqttflag = true;
 
-                    aftersubmitflag = true;
+                mqttClient.connect();
 
-                    mqttflag = true;
-                    submitFlag = false;
-                    voiceFlag = false;
-                    stopSpeechRecognition();
-                    sendEmail(emp_id, guestId, purposeOfVisit, guestName, companyName, phoneNumber);
-                    emailFormAlert.dismiss();
-                }
+                submitFlag = false;
+                voiceFlag = false;
+                stopSpeechRecognition();
+                sendEmail(emp_id, guestId, purposeOfVisit, guestName, companyName, phoneNumber);
+                emailFormAlert.dismiss();
+            }
 
-                else {
-                    String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.form;
-                    playVideo(videoPath);
-                }
+            else {
+                String videoPath1 = "android.resource://" + getPackageName() + "/" + R.raw.form;
+                playVideo(videoPath1);
             }
         });
 
@@ -724,13 +693,10 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
         }
 
 
-        bottomSheetDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-            @Override
-            public void onDismiss(DialogInterface dialogInterface) {
-                if(bottomSheet) {
-                    bottomSheet = false;
-                    showDepartmentListBottomSheet();
-                }
+        bottomSheetDialog.setOnDismissListener(dialogInterface -> {
+            if(bottomSheet) {
+                bottomSheet = false;
+                showDepartmentListBottomSheet();
             }
         });
 
@@ -1654,43 +1620,16 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
         this.emp_id = emp_id;
     }
 
-    private void sendEmail(String employeeId,String guestId, String purposeOfVisit, String guestName, String companyName, String phoneNumber) {
+    private void sendEmail(String employeeId, String guestId, String purposeOfVisit, String guestName, String companyName, String phoneNumber) {
 
         apiCaller = new ApiCaller();
-        apiCaller.executeApiCall(employeeId, guestId, purposeOfVisit, guestName, companyName,phoneNumber);
+        apiCaller.executeApiCall(employeeId, guestId, purposeOfVisit, guestName, companyName, phoneNumber);
 
-        //emailhandler = new Handler(Looper.getMainLooper());
 
         // Schedule the runnable to be executed after the delay
         resetActivityDelay(120000);
 
     }
-
-//        // Start the timer for 2 minutes (120000 milliseconds)
-//        startTimer(120000);
-//    }
-//
-//    private void startTimer(long milliseconds) {
-//        if (timer != null) {
-//            timer.cancel();
-//        }
-//        timer = new CountDownTimer(milliseconds, 1000) {
-//            public void onTick(long millisUntilFinished) {
-//                // Update UI with the remaining time
-//                long secondsRemaining = millisUntilFinished / 1000;
-//                // Assuming you have a TextView named timerTextView to display the countdown
-//                textViewTimer.setText("Time remaining: " + secondsRemaining + " seconds");
-//            }
-//
-//            public void onFinish() {
-//                // Timer finished, do something here
-//                // For example, hide the timer TextView or perform some action
-//                textViewTimer.setVisibility(View.GONE);
-//            }
-//        }.start();
-
-        // Schedule the runnable to be executed after the delay
-  //      emailhandler.postDelayed(runnable, 30000);
 
 
     public void playVideo(String path)
@@ -1732,30 +1671,36 @@ public class MainActivity extends AppCompatActivity implements MQTTClient.MQTTCl
     @Override
     public void onMessageReceived(String topic, String message) {
 
+        Log.d("topic", topic);
+
+        Log.d("mqtt response", message);
+
         aftersubmitflag = false;
 
         resetflag = true;
 
         mqttflag = false;
 
-   //     emailhandler.removeCallbacksAndMessages(runnable);
-
         activityDelayHandler.removeCallbacks(activityDelayRunnable);
 
         if (message != null && message.toLowerCase().contains("accepted")) {
             voiceFlag = false;
             resetactvity = true;
+            mqttClient.disconnect();
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.available;
             playVideo(videoPath);
-        } else {
+        } else if (message != null && message.toLowerCase().contains("rejected")) {
             yesNoFlag = true;
             voiceFlag = true;
+            mqttClient.disconnect();
             String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.notavailable;
             playVideo(videoPath);
             generateGuestId(base64);
         }
-        mqttClient.disconnect();
+
     }
+
+
 
     private void showYesOrNoDialog()
     {
